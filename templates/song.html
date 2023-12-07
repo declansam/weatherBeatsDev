@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="../static/stylesSong.css"/>
+    <title>WeatherBeats</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container text-center">
+        
+        <div class="nav-bar">
+
+            <div class="logo">
+                <a href="/">
+                    <img src="../static/images/logo-weatherBeats-fit.png" alt="logo">
+                </a>
+            </div>
+
+            <!-- Form -->
+            <form class="" method="GET" action="song.html">
+                <input type="text" class="" name="location" placeholder="Enter a city name">
+                <button type="submit" class="btn btn-primary btn-block">Submit</button>
+            </form>
+
+        </div>
+        
+        <!-- Header -->
+        <div class="hero-container header mt-5">
+            <div id="loading-content">
+                Loading Content...
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+
+            <div class="mood-container">
+                <div class="mood-image">
+                    <img src="../static/images/placeholder-image.png" alt="mood-cover-poster">
+                </div>
+                <div class="mood-content">
+                    <h1>Location Mood</h1>
+                </div>
+                <div class="weather-in-loc">
+                    <h3>Weather in Location</h3>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div class="map mood-image">
+                    <iframe id="map" title="dynamic-map" width="300" height="200">
+                    </iframe>
+
+                </div>
+                <div class="map-loc">
+                    <h1>Location</h1>
+                </div>
+            </div>
+        </div>
+
+        <div id="playlist-title">
+            <p>YOUR PLAYLIST</p>
+        </div>
+        <!-- Content -->
+        <div class="content">
+            <div class="list-group content-list">
+                <!-- Placeholder for all the Spotify data in a table -->
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Link JS file -->
+    <!-- <script src = "../static/songs.js"></script> -->
+    
+    <script>
+
+        // helper function to create an expandable list item with song info and lyrics
+        function createExpandableListItem(song) {
+            let expandableListItem = document.createElement('li');
+            expandableListItem.classList.add('expandable-list-item');
+
+            let songInfoDiv = document.createElement('div');
+            songInfoDiv.classList.add('song-info');
+            songInfoDiv.style.display = 'block';
+            
+            // Song Title as H1
+            let songTitle = document.createElement('h3');
+            songTitle.innerHTML = song.song_name;
+            songInfoDiv.appendChild(songTitle);
+
+            // Song Artist, Genre, Moods as P
+            let artistName = document.createElement('h4');
+            artistName.innerHTML = '<span>Artist:</span> ' + song.artist_name;
+            songInfoDiv.appendChild(artistName);
+
+            let genre = document.createElement('h4');
+            genre.innerHTML = '<span>Genre:</span> ' + song.genre;
+            songInfoDiv.appendChild(genre);
+
+            let moods = document.createElement('h4');
+            moods.innerHTML = '<span>Mood:</span> ' + song.moods;
+            songInfoDiv.appendChild(moods);
+
+            // songInfoDiv.textContent = `Artist: ${song.artist_name}, Genre: ${song.genre}, Moods: ${song.moods}`;
+
+            let uriDiv = document.createElement('div');
+            uriDiv.classList.add('uri');
+
+            let spotifyLink = document.createElement('a');
+            spotifyLink.href = song.uri;
+            spotifyLink.target = '_blank';
+            spotifyLink.textContent = 'Listen on Spotify';
+            uriDiv.appendChild(spotifyLink);
+            uriDiv.style.display = 'none';
+
+            expandableListItem.appendChild(songInfoDiv);
+            expandableListItem.appendChild(uriDiv);
+
+            expandableListItem.addEventListener('mouseenter', function () {
+                uriDiv.style.display = 'block';
+                songInfoDiv.style.display = 'none';
+            });
+
+            expandableListItem.addEventListener('mouseleave', function () {
+                uriDiv.style.display = 'none';
+                songInfoDiv.style.display = 'block';
+            });
+
+
+            return expandableListItem;
+        }
+
+        
+        // get the location parameter from the URL
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const location_param = urlParams.get('location');
+
+        // if location parameter exists, fetch the mood and song data
+        if (location_param) {
+
+            fetch('/latlongFromWeatherAPI?location=' + location_param)
+            .then(
+                function(resp) {
+                    return resp.json();
+                }
+            )
+            .then (
+                function(data) {
+
+                    let mood = data['mood'];
+                    
+                    const mood_header = document.querySelector('.mood-content h1');
+                    mood_header.textContent = mood.join(', ');
+
+                    const weather_in_loc = document.querySelector('.weather-in-loc h3');
+                    weather_in_loc.textContent = data['weather'];
+
+                    const map_loc = document.querySelector('.map-loc h1');
+                    map_loc.textContent = location_param;
+
+                    // change the placeholder image to the cover poster for the mood
+                    const mood_image = document.querySelector('.mood-image img');
+                    const filename = data['mood'][0].toLowerCase() + '.jpeg'; // takes the first mood for any given weather / location
+                    mood_image.src = '../static/images/mood-cover/' + filename;
+
+                    // list of mood to a string
+                    mood = mood.join(' ');
+
+                    console.log(mood);
+
+                    // make the component visible
+                    document.querySelector('#loading-content').remove();
+
+                    const mood_container = document.querySelector('.mood-container');
+                    mood_container.style.display = 'flex';
+
+                    const map_container = document.querySelector('.map-container');
+                    map_container.style.display = 'flex';
+
+
+                    // get the latitude and longitude of the location
+                    const lat = data['lat'];
+                    const long = data['long'];
+
+                    fetch('/locationVizAPI?lat=' + lat + '&long=' + long)
+                    .then(
+                        function(resp) {
+                            console.log('fetching location viz')
+                            return resp.json();
+                        }
+                    )
+                    .then (
+                        function(data) {
+                            const map_image = document.querySelector('.map img');
+                            map_image.src = 'data:image/png;base64,' + data.image;
+                        }
+                    )
+
+                    // // get the google api key from backend
+                    // const google_api_key = data['google_api_key'];
+
+                    // // get the map image from the API
+                    // const map_image = document.querySelector('.map img');
+                    // map_image.src = 'https://maps.googleapis.com/maps/api/staticmap?center=' + 
+                    //                     lat + ',' + 
+                    //                     lon + 
+                    //                     '&zoom=4&size=500x500&maptype=roadmap&markers=color:red%7Clabel:C%7C' +
+                    //                     lat + ',' + lon + `&key=${google_api_key}`;
+
+                    
+
+                    fetch('/songsFromMoodAPI?moods=' + mood.trim())
+                    .then(
+                        function(resp) {
+                            return resp.json();
+                        }
+                    )
+                    .then (
+                        function displaySongs(data) {
+                            let songList = data['songs'];
+                            let contentList = document.querySelector('.content-list');
+                            const table = document.createElement('table');
+                            contentList.appendChild(table);
+
+                            let cellCounter = 0;
+                            let currentRow;
+                            for (let song of songList) {
+                                if (cellCounter % 4 === 0) {
+                                            currentRow = document.createElement('tr');
+                                            table.appendChild(currentRow);
+                                        }
+                                const cell = document.createElement('td');
+                                let expandableListItem = createExpandableListItem(song);
+                                cell.appendChild(expandableListItem);
+                                currentRow.appendChild(cell);
+
+                                cellCounter++;
+                            }
+                        }
+                    )
+                }
+            )
+
+        }
+
+        function updateMap() {
+            // Get the iframe element
+            var iframe = document.getElementById("map");
+
+            // Update the iframe src with the backend endpoint and location parameter
+            iframe.src = "/map?location=" + encodeURIComponent(location_param);
+        }
+
+        // Call updateMap function with desired location
+        updateMap();
+
+    </script>
+
+</body>
+</html>

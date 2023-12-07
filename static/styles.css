@@ -1,0 +1,59 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100%;
+    background-color: rgb(235, 233, 233) !important;
+}
+
+
+#instructions{
+
+    text-align: center;
+    font-family: 'AvenirNext-Medium'
+}
+
+#titleName{
+    text-align: center;
+    color: #0b8bc6;
+    font-size: 700 px;
+    font-family: 'AvenirNext-Bold', sans-serif;
+
+}
+
+.img{
+    text-align: center;
+    width: 250 px;
+    height: auto;
+}
+
+#input{
+    text-align: center;
+    font-family: 'AvenirNext-Medium'
+}
+
+/* Padding between search bar & visualization */
+#input form {
+    padding-bottom: 40px;
+}
+
+/* Tengis stylings */
+.container {
+    padding: 50px;
+}
+
+.container img {
+    width: 40%;
+    height: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.footer {
+    background-color: #333333;
+    color: #FFFFFF;
+    text-align: center;
+    padding: 10px 0;
+}
